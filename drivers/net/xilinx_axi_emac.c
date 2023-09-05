@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0+
+
 /*
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Also add information on how to contact you by electronic and paper mail.
+ */
+/*
+ * Copyright (C) 2023, Syntacore Ltd.
  * Copyright (C) 2021 Waymo LLC
  * Copyright (C) 2011 Michal Simek <monstr@monstr.eu>
  * Copyright (C) 2011 PetaLogix
@@ -453,11 +472,33 @@ static int setup_phy(struct udevice *dev)
 	return 1;
 }
 
+/* Reset DMA engine */
+static void axi_dma_reset(struct axidma_priv *priv)
+{
+	u32 timeout = 500;
+
+	/* Reset the engine so the hardware starts from a known state */
+	writel(XAXIDMA_CR_RESET_MASK, &priv->dmatx->control);
+	writel(XAXIDMA_CR_RESET_MASK, &priv->dmarx->control);
+
+	/* At the initialization time, hardware should finish reset quickly */
+	while (timeout--) {
+		/* Check transmit/receive channel */
+		/* Reset is done when the reset bit is low */
+		if (!((readl(&priv->dmatx->control) |
+		    readl(&priv->dmarx->control)) & XAXIDMA_CR_RESET_MASK))
+			break;
+	}
+	if (!timeout)
+		printf("%s: DMA reset timeout!\n", __func__);
+}
+
 /* STOP DMA transfers */
 static void axiemac_stop(struct udevice *dev)
 {
 	struct axidma_priv *priv = dev_get_priv(dev);
 	u32 temp;
+	int count;
 
 	/* Stop the hardware */
 	temp = readl(&priv->dmatx->control);
@@ -467,6 +508,21 @@ static void axiemac_stop(struct udevice *dev)
 	temp = readl(&priv->dmarx->control);
 	temp &= ~XAXIDMA_CR_RUNSTOP_MASK;
 	writel(temp, &priv->dmarx->control);
+
+	/* Give DMAs a chance to halt gracefully */
+	temp = readl(&priv->dmarx->status);
+	for (count = 0; !(temp & XAXIDMA_HALTED_MASK) && count < 5; ++count) {
+		mdelay(20);
+		temp = readl(&priv->dmarx->status);
+	}
+
+	temp = readl(&priv->dmatx->status);
+	for (count = 0; !(temp & XAXIDMA_HALTED_MASK) && count < 5; ++count) {
+		mdelay(20);
+		temp = readl(&priv->dmatx->status);
+	}
+
+	axi_dma_reset(priv);
 
 	debug("axiemac: Halted\n");
 }
@@ -552,29 +608,6 @@ static int axiemac_write_hwaddr(struct udevice *dev)
 	return 0;
 }
 
-/* Reset DMA engine */
-static void axi_dma_init(struct axidma_priv *priv)
-{
-	u32 timeout = 500;
-
-	/* Reset the engine so the hardware starts from a known state */
-	writel(XAXIDMA_CR_RESET_MASK, &priv->dmatx->control);
-	writel(XAXIDMA_CR_RESET_MASK, &priv->dmarx->control);
-
-	/* At the initialization time, hardware should finish reset quickly */
-	while (timeout--) {
-		/* Check transmit/receive channel */
-		/* Reset is done when the reset bit is low */
-		if (!((readl(&priv->dmatx->control) |
-				readl(&priv->dmarx->control))
-						& XAXIDMA_CR_RESET_MASK)) {
-			break;
-		}
-	}
-	if (!timeout)
-		printf("%s: Timeout\n", __func__);
-}
-
 static int axiemac_start(struct udevice *dev)
 {
 	struct axidma_priv *priv = dev_get_priv(dev);
@@ -587,7 +620,7 @@ static int axiemac_start(struct udevice *dev)
 	 * reset, and since AXIDMA reset line is connected to AxiEthernet, this
 	 * would ensure a reset of AxiEthernet.
 	 */
-	axi_dma_init(priv);
+	axi_dma_reset(priv);
 
 	/* Initialize AxiEthernet hardware. */
 	if (priv->mactype == EMAC_1G) {
@@ -755,10 +788,16 @@ static int axiemac_recv(struct udevice *dev, int flags, uchar **packetp)
 	temp = readl(&priv->dmarx->control);
 	temp &= ~XAXIDMA_IRQ_ALL_MASK;
 	writel(temp, &priv->dmarx->control);
+
+	/* Invalidate here for speculative prefetch case */
+	invalidate_dcache_range((phys_addr_t)&rx_bd, (phys_addr_t)&rx_bd + sizeof(rx_bd));
+
 	if (!priv->eth_hasnobuf  && priv->mactype == EMAC_1G)
 		length = rx_bd.app4 & 0xFFFF; /* max length mask */
 	else
 		length = rx_bd.status & XAXIDMA_BD_STS_ACTUAL_LEN_MASK;
+
+	invalidate_dcache_range((phys_addr_t)&rxframe, (phys_addr_t)&rxframe + length);
 
 #ifdef DEBUG
 	print_buffer(&rxframe, &rxframe[0], 1, length, 16);

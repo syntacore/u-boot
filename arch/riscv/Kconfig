@@ -1,3 +1,21 @@
+#
+# Copyright (C) 2022, Syntacore Ltd.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Also add information on how to contact you by electronic and paper mail.
+
 menu "RISC-V architecture"
 	depends on RISCV
 
@@ -23,6 +41,9 @@ config TARGET_OPENPITON_RISCV64
 config TARGET_QEMU_VIRT
 	bool "Support QEMU Virt Board"
 	select BOARD_LATE_INIT
+
+config TARGET_SCR_L2_CLUSTER
+	bool "Support SCR5/SCR7/SCR9 RISC-V cores in L2 cluster"
 
 config TARGET_SIFIVE_UNLEASHED
 	bool "Support SiFive Unleashed Board"
@@ -89,6 +110,7 @@ source "board/sifive/unmatched/Kconfig"
 source "board/sipeed/maix/Kconfig"
 source "board/sophgo/milkv_duo/Kconfig"
 source "board/starfive/visionfive2/Kconfig"
+source "board/syntacore/scr_l2_cluster/Kconfig"
 source "board/thead/th1520_lpi4a/Kconfig"
 source "board/xilinx/mbv/Kconfig"
 
@@ -99,6 +121,7 @@ source "arch/riscv/cpu/fu540/Kconfig"
 source "arch/riscv/cpu/fu740/Kconfig"
 source "arch/riscv/cpu/generic/Kconfig"
 source "arch/riscv/cpu/jh7110/Kconfig"
+source "arch/riscv/cpu/scr/Kconfig"
 
 # architecture-specific options below
 

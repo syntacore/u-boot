@@ -1,9 +1,28 @@
 // SPDX-License-Identifier:  GPL-2.0+
+
+/*
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Also add information on how to contact you by electronic and paper mail.
+ */
 /*
  * mtd.c
  *
  * Generic command to handle basic operations on any memory device.
  *
+ * Copyright (C) 2023, Syntacore Ltd.
  * Copyright: Bootlin, 2018
  * Author: Miquèl Raynal <miquel.raynal@bootlin.com>
  */
@@ -470,7 +489,8 @@ static int do_mtd_io(struct cmd_tbl *cmdtp, int flag, int argc,
 	bool dump, read, raw, woob, write_empty_pages, has_pages = false;
 	u64 start_off, off, len, remaining, default_len;
 	struct mtd_oob_ops io_op = {};
-	uint user_addr = 0, npages;
+	ulong user_addr = 0;
+	uint npages;
 	const char *cmd = argv[0];
 	struct mtd_info *mtd;
 	u32 oob_len;

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-2.0+
+
+#
+# Copyright (C) 2022, Syntacore Ltd.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Also add information on how to contact you by electronic and paper mail.
+
+config SYNTACORE_SCR
+	bool
+	select SYS_CACHE_SHIFT_6
+	select ARCH_EARLY_INIT_R
+	imply CPU
+	imply CPU_RISCV
+	imply ARCH_RV64I
+	imply RISCV_TIMER if (RISCV_SMODE || SPL_RISCV_SMODE)
+	imply CMD_CPU
+
+config SCR_CMO_BLOCK_SIZE
+	int "Cache management operations granularity"
+	default 32
+	help
+	   Minimal count of bytes affected by cache line flush/invalidation
+	   operations. For SCR platforms it's basically the size of the
+	   top-level cache line. It is safe however sub-optimal to
+	   specify bytes count lesser than top-level cache line size.
+	   In any case the value configured should be a power of 2.

@@ -1,0 +1,7 @@
+Syntacore SCR_L2_CLUSTER boards
+M:     Alexander Chuprunov <alexander.chuprunov@syntacore.com>
+M:     Sergey Matyukevich <sergey.matyukevich@syntacore.com>
+S:     Maintained
+F:     board/syntacore/scr_l2_cluster/
+F:     include/configs/scr_l2_cluster.h
+F:     configs/scr_rv64_l2_cluster_defconfig

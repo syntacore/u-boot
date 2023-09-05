@@ -1,0 +1,61 @@
+#
+# Copyright (C) 2024, Syntacore Ltd.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Also add information on how to contact you by electronic and paper mail.
+
+if TARGET_SCR_L2_CLUSTER
+
+config SYS_BOARD
+	default "scr_l2_cluster"
+
+config SYS_VENDOR
+	default "syntacore"
+
+config SYS_CPU
+	default "scr"
+
+config SYS_CONFIG_NAME
+	default "scr_l2_cluster"
+
+config DEFAULT_DEVICE_TREE
+	default "empty"
+
+config TEXT_BASE
+	default 0x00000000
+
+config BOARD_SPECIFIC_OPTIONS
+	def_bool y
+	select SYNTACORE_SCR
+	imply OF_HAS_PRIOR_STAGE
+	imply SYS_NS16550
+	imply SYS_NS16550_SERIAL
+	imply XILINX_AXIEMAC
+	imply PHY_TI_DP83867
+	imply PHY_XILINX
+	imply PHYS_64BIT
+	imply PHY_GIGE
+	imply DM_ETH
+	imply DM_ETH_PHY
+	imply XILINX_SPI
+	imply MTD
+	imply DM_MTD
+	imply SPI
+	imply SPI_FLASH
+	imply SPI_FLASH_MTD
+	imply SPI_FLASH_STMICRO
+	imply SPI_FLASH_MACRONIX
+
+endif

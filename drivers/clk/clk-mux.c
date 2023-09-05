@@ -88,6 +88,7 @@ unsigned int clk_mux_index_to_val(u32 *table, unsigned int flags, u8 index)
 u8 clk_mux_get_parent(struct clk *clk)
 {
 	struct clk_mux *mux = to_clk_mux(clk);
+	int index;
 	u32 val;
 
 #if IS_ENABLED(CONFIG_SANDBOX_CLK_CCF)
@@ -98,7 +99,13 @@ u8 clk_mux_get_parent(struct clk *clk)
 	val >>= mux->shift;
 	val &= mux->mask;
 
-	return clk_mux_val_to_index(clk, mux->table, mux->flags, val);
+	index = clk_mux_val_to_index(clk, mux->table, mux->flags, val);
+	if (index < 0) {
+		log_err("Could not fetch index\n");
+		index = 0;
+	}
+
+	return index;
 }
 
 int clk_mux_fetch_parent_index(struct clk *clk, struct clk *parent)
